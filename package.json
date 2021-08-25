@@ -1,0 +1,21 @@
+{
+  "name": "alpine-tailwind-idb",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "postcss tailwind.css -o css/tailwind.css && serve",
+    "build": "NODE_ENV=production postcss tailwind.css -o css/tailwind.css"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "serve": "^12.0.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.3.2",
+    "postcss": "^8.3.6",
+    "tailwindcss": "^2.2.7"
+  }
+}
