@@ -19,3 +19,5 @@ I plan to add:
 ### Running
 1. Install `npm i`
 2. Run `npm run serve` for development
+
+Will be available in `http://localhost:5000`
