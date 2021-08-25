@@ -13,6 +13,8 @@ I plan to add:
 - JSON import <-> export and interoperability with Summer v1
 - Different currencies
 - Online storage/synchronization
+- BoM duplication for similar BoM list
+- Link for online shopping reference
 
 ### Running
 1. Install `npm i`
