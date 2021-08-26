@@ -1,10 +1,11 @@
 {
-  "name": "alpine-tailwind-idb",
+  "name": "summer2",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build-tailwind": "postcss tailwind.css -o css/tailwind.css",
     "serve": "postcss tailwind.css -o css/tailwind.css && serve",
     "build": "NODE_ENV=production postcss tailwind.css -o css/tailwind.css"
   },
