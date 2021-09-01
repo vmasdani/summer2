@@ -2,48 +2,61 @@
   <head>
     <meta charset="UTF-8" />
     <title>Main</title>
-    <script src="main.js"></script>
-    <link href="css/tailwind.css" rel="stylesheet" />
-    <script src="js/idb-keyval.min.js"></script>
+    <link rel="stylesheet" href="css/tailwind.css" />
+    <link rel="icon" href="static/gear.png" />
+    <script src="https://cdn.jsdelivr.net/npm/idb-keyval@5/dist/iife/index-min.js"></script>
+    <script src="js/main.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   </head>
 
   <body>
     <div id="myapp"></div>
-
     <script>
       var app = Elm.Main.init({
         node: document.getElementById("myapp"),
+        flags: {
+          seed: Math.floor(
+            (new Date().getTime() / 1000 + Math.random()) * 1000
+          ),
+        },
       });
 
-      // Init idb set
-      const init = async () => {
-        await Promise.all(
-          ["boms", "items"].map(async (table) => {
-            const tableContents = await idbKeyval.get(table);
+      app.ports.idbSend.subscribe(async (obj) => {
+        console.log(obj);
+        console.log(obj.table);
 
-            if (tableContents) {
-              console.log(table, "found:", tableContents);
-            } else {
-              console.log(table, "not found. Creating...");
+        const item = JSON.parse(obj.content);
+
+        const items = await idbKeyval.get(obj.table);
+
+        if (items) {
+          await idbKeyval.set(obj.table, [...items, item]);
+
+          app.ports.idbRecv.send({
+            table: obj.table,
+            content: JSON.stringify(await idbKeyval.get(obj.table)),
+          });
+        }
+      });
+
+      const initApp = async () => {
+        await Promise.all(
+          ["boms", "bomItems"].map(async (table) => {
+            console.log("Table:", await idbKeyval.get(table));
+
+            if (!(await idbKeyval.get(table))) {
               await idbKeyval.set(table, []);
             }
+
+            app.ports.idbRecv.send({
+              table: table,
+              content: JSON.stringify(await idbKeyval.get(table)),
+            });
           })
         );
-
-        app.ports.idbGet.subscribe(async (table) => {
-          app.ports.idbRecv.send({
-            name: table,
-            content: (await idbKeyval.get("boms"))
-              ? JSON.stringify(await idbKeyval.get("boms"))
-              : null,
-          });
-        });
-
-        const idbSet = async (table, value) =>
-          await idbKeyVal.set(table, value);
       };
 
-      init();
+      initApp();
     </script>
   </body>
 </html>

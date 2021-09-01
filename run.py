@@ -22,11 +22,8 @@ try:
 
     elif type == 'dev':
         print('Running dev')
-        subprocess.run('elm make src/Main.elm --output=main.js && python3 -m http.server',
+        subprocess.run('npm run dev',
                        cwd='.', shell=True)
-
-    elif type == 'serve':
-        subprocess.run('python3 -m http.server', cwd='.', shell=True)
 
     else:
         print('Error: run type irrelevant. [dev | prod | serve]')
