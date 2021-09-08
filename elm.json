@@ -16,6 +16,7 @@
             "elm/random": "1.0.0",
             "elm/url": "1.0.0",
             "elm-community/json-extra": "4.3.0",
+            "elm-community/list-extra": "8.4.0",
             "mthadley/elm-hash-routing": "1.0.1"
         },
         "indirect": {

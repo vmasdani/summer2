@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build-tailwind": "postcss tailwind.css -o css/tailwind.css",
-    "dev": "elm make src/Main.elm --output=js/main.js && serve"
+    "dev": "elm make src/Main.elm --output=js/main.js && serve",
+    "build": "NODE_ENV=production postcss tailwind.css -o css/tailwind.css && elm make src/Main.elm --output=js/main.js && serve"
   },
   "author": "",
   "license": "ISC",
@@ -16,6 +17,7 @@
     "tailwindcss": "^2.2.9"
   },
   "dependencies": {
+    "postcss-cli": "^8.3.1",
     "serve": "^12.0.0"
   }
 }

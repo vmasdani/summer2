@@ -5406,15 +5406,23 @@ var $author$project$Main$idbSend = _Platform_outgoingPort(
 				]));
 	});
 var $elm$json$Json$Decode$list = _Json_decodeList;
+var $elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
 var $elm$browser$Browser$Navigation$load = _Browser_load;
-var $elm$core$Debug$log = _Debug_log;
+var $elm$core$Basics$not = _Basics_not;
 var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
 var $elm$random$Random$step = F2(
 	function (_v0, seed) {
 		var generator = _v0.a;
 		return generator(seed);
 	});
-var $elm$core$Debug$toString = _Debug_toString;
 var $elm$url$Url$addPort = F2(
 	function (maybePort, starter) {
 		if (maybePort.$ === 'Nothing') {
@@ -5878,6 +5886,41 @@ var $danyx23$elm_uuid$Uuid$uuidGenerator = A2($elm$random$Random$map, $danyx23$e
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
+			case 'ToggleModal':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{showModal: !model.showModal}),
+					$elm$core$Platform$Cmd$none);
+			case 'NoOpStr':
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			case 'ChangeBomName':
+				var bomUuid = msg.a;
+				var name = msg.b;
+				var newBoms = A2(
+					$elm$core$List$map,
+					function (bom) {
+						return _Utils_eq(bom.uuid, bomUuid) ? _Utils_update(
+							bom,
+							{
+								name: $elm$core$Maybe$Just(name)
+							}) : bom;
+					},
+					A2($elm$core$Maybe$withDefault, _List_Nil, model.boms));
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							boms: $elm$core$Maybe$Just(newBoms)
+						}),
+					$author$project$Main$idbSend(
+						{
+							content: A2(
+								$elm$json$Json$Encode$encode,
+								0,
+								A2($elm$json$Json$Encode$list, $author$project$Main$bomEncoder, newBoms)),
+							table: 'boms'
+						}));
 			case 'AddBom':
 				var _v1 = A2($elm$random$Random$step, $danyx23$elm_uuid$Uuid$uuidGenerator, model.currentSeed);
 				var newUuid = _v1.a;
@@ -5891,43 +5934,55 @@ var $author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{currentSeed: newSeed}),
-					$author$project$Main$idbSend(
-						{
-							content: A2(
-								$elm$json$Json$Encode$encode,
-								0,
-								$author$project$Main$bomEncoder(newBom)),
-							table: 'boms'
-						}));
+					function () {
+						var _v2 = model.boms;
+						if (_v2.$ === 'Just') {
+							var boms = _v2.a;
+							return $author$project$Main$idbSend(
+								{
+									content: A2(
+										$elm$json$Json$Encode$encode,
+										0,
+										A2(
+											$elm$json$Json$Encode$list,
+											$author$project$Main$bomEncoder,
+											_Utils_ap(
+												boms,
+												_List_fromArray(
+													[newBom])))),
+									table: 'boms'
+								});
+						} else {
+							return $elm$core$Platform$Cmd$none;
+						}
+					}());
 			case 'Recv':
 				var recvModel = msg.a;
-				return $elm$core$Debug$log(
-					$elm$core$Debug$toString(recvModel))(
-					_Utils_Tuple2(
-						function () {
-							var _v2 = recvModel.table;
-							if (_v2 === 'boms') {
-								return _Utils_update(
-									model,
-									{
-										boms: function () {
-											var _v3 = A2(
-												$elm$json$Json$Decode$decodeString,
-												$elm$json$Json$Decode$list($author$project$Main$bomDecoder),
-												recvModel.content);
-											if (_v3.$ === 'Ok') {
-												var boms = _v3.a;
-												return $elm$core$Maybe$Just(boms);
-											} else {
-												return model.boms;
-											}
-										}()
-									});
-							} else {
-								return model;
-							}
-						}(),
-						$elm$core$Platform$Cmd$none));
+				return _Utils_Tuple2(
+					function () {
+						var _v3 = recvModel.table;
+						if (_v3 === 'boms') {
+							return _Utils_update(
+								model,
+								{
+									boms: function () {
+										var _v4 = A2(
+											$elm$json$Json$Decode$decodeString,
+											$elm$json$Json$Decode$list($author$project$Main$bomDecoder),
+											recvModel.content);
+										if (_v4.$ === 'Ok') {
+											var boms = _v4.a;
+											return $elm$core$Maybe$Just(boms);
+										} else {
+											return model.boms;
+										}
+									}()
+								});
+						} else {
+							return model;
+						}
+					}(),
+					$elm$core$Platform$Cmd$none);
 			case 'LinkClicked':
 				var urlRequest = msg.a;
 				if (urlRequest.$ === 'Internal') {
@@ -5957,9 +6012,14 @@ var $author$project$Main$update = F2(
 		}
 	});
 var $author$project$Main$AddBom = {$: 'AddBom'};
+var $author$project$Main$ChangeBomName = F2(
+	function (a, b) {
+		return {$: 'ChangeBomName', a: a, b: b};
+	});
 var $author$project$Main$SetModel = function (a) {
 	return {$: 'SetModel', a: a};
 };
+var $author$project$Main$ToggleModal = {$: 'ToggleModal'};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -5971,6 +6031,8 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$hr = _VirtualDom_node('hr');
+var $elm$html$Html$i = _VirtualDom_node('i');
+var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$virtual_dom$VirtualDom$attribute = F2(
 	function (key, value) {
 		return A2(
@@ -5979,6 +6041,72 @@ var $elm$virtual_dom$VirtualDom$attribute = F2(
 			_VirtualDom_noJavaScriptOrHtmlUri(value));
 	});
 var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
+var $elm$html$Html$span = _VirtualDom_node('span');
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$Modal$modal = F2(
+	function (show, content) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class(
+					(show ? 'visible' : 'invisible') + ' fixed z-10 inset-0 overflow-y-auto'),
+					A2($elm$html$Html$Attributes$attribute, 'aria-labelledby', 'modal-title'),
+					A2($elm$html$Html$Attributes$attribute, 'role', 'dialog'),
+					A2($elm$html$Html$Attributes$attribute, 'aria-modal', 'true')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class(
+									(show ? 'visible' : 'invisible') + ' fixed inset-0 bg-gray-500 bg-opacity-75 '),
+									A2($elm$html$Html$Attributes$attribute, 'aria-hidden', 'true')
+								]),
+							_List_Nil),
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('hidden sm:inline-block sm:align-middle sm:h-screen'),
+									A2($elm$html$Html$Attributes$attribute, 'aria-hidden', 'true')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('\u200B')
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class(
+									(show ? 'visible' : 'invisible') + ' inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform sm:my-8 sm:align-middle sm:max-w-lg sm:w-full')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('p-3')
+										]),
+									_List_fromArray(
+										[content]))
+								]))
+						]))
+				]));
+	});
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -5996,169 +6124,40 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
-var $author$project$DeactivateButton$btn = function (clickEvt) {
-	return A2(
-		$elm$html$Html$button,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$type_('button'),
-				$elm$html$Html$Events$onClick(clickEvt),
-				$elm$html$Html$Attributes$class('w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm')
-			]),
-		_List_fromArray(
-			[
-				$elm$html$Html$text('Deactivate')
-			]));
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
 };
-var $elm$html$Html$h3 = _VirtualDom_node('h3');
-var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
-var $elm$core$Basics$not = _Basics_not;
-var $elm$html$Html$p = _VirtualDom_node('p');
-var $elm$html$Html$span = _VirtualDom_node('span');
-var $author$project$Main$modal = function (model) {
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class(
-				'fixed z-10 inset-0 overflow-y-auto ' + (model.showModal ? 'visible' : 'invisible')),
-				A2($elm$html$Html$Attributes$attribute, 'aria-labelledby', 'modal-title'),
-				A2($elm$html$Html$Attributes$attribute, 'role', 'dialog'),
-				A2($elm$html$Html$Attributes$attribute, 'aria-modal', 'true')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity'),
-								A2($elm$html$Html$Attributes$attribute, 'aria-hidden', 'true')
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$span,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('hidden sm:inline-block sm:align-middle sm:h-screen'),
-								A2($elm$html$Html$Attributes$attribute, 'aria-hidden', 'true')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('\u200B')
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4')
-									]),
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('sm:flex sm:items-start')
-											]),
-										_List_fromArray(
-											[
-												A2(
-												$elm$html$Html$div,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$class('mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10')
-													]),
-												_List_Nil),
-												A2(
-												$elm$html$Html$div,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$class('mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left')
-													]),
-												_List_fromArray(
-													[
-														A2(
-														$elm$html$Html$h3,
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$class('text-lg leading-6 font-medium text-gray-900'),
-																$elm$html$Html$Attributes$id('modal-title')
-															]),
-														_List_fromArray(
-															[
-																$elm$html$Html$text('Deactivate account')
-															])),
-														A2(
-														$elm$html$Html$div,
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$class('mt-2')
-															]),
-														_List_fromArray(
-															[
-																A2(
-																$elm$html$Html$p,
-																_List_fromArray(
-																	[
-																		$elm$html$Html$Attributes$class('text-sm text-gray-500')
-																	]),
-																_List_fromArray(
-																	[
-																		$elm$html$Html$text('Are you sure you want to deactivate your account? All of your data will be permanently removed. This action cannot be undone.')
-																	]))
-															]))
-													]))
-											]))
-									])),
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse')
-									]),
-								_List_fromArray(
-									[
-										$author$project$DeactivateButton$btn(
-										$author$project$Main$SetModel(
-											_Utils_update(
-												model,
-												{showModal: !model.showModal}))),
-										A2(
-										$elm$html$Html$button,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$type_('button'),
-												$elm$html$Html$Attributes$class('mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Cancel')
-											]))
-									]))
-							]))
-					]))
-			]));
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
 };
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
+var $elm$core$Debug$toString = _Debug_toString;
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Main$view = function (model) {
 	return {
 		body: _List_fromArray(
@@ -6284,19 +6283,48 @@ var $author$project$Main$view = function (model) {
 														[
 															A2(
 															$elm$html$Html$div,
-															_List_Nil,
 															_List_fromArray(
 																[
-																	$elm$html$Html$text(
-																	function () {
-																		var _v1 = bom.uuid;
-																		if (_v1.$ === 'Just') {
-																			var uuid = _v1.a;
-																			return uuid;
-																		} else {
-																			return '';
-																		}
-																	}())
+																	$elm$html$Html$Attributes$class('flex my-1')
+																]),
+															_List_fromArray(
+																[
+																	A2(
+																	$elm$html$Html$input,
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$Events$onInput(
+																			$author$project$Main$ChangeBomName(bom.uuid)),
+																			$elm$html$Html$Attributes$value(
+																			function () {
+																				var _v1 = bom.name;
+																				if (_v1.$ === 'Just') {
+																					var name = _v1.a;
+																					return name;
+																				} else {
+																					return '';
+																				}
+																			}()),
+																			$elm$html$Html$Attributes$class('flex-grow border-2 border-grey-500 px-2 py-1 shadow shadow-md'),
+																			$elm$html$Html$Attributes$placeholder('BoM Name...')
+																		]),
+																	_List_Nil),
+																	A2(
+																	$elm$html$Html$button,
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$Attributes$class('py-1 px-2 ml-2 bg-red-500 hover:bg-red-600 text-white rounded-md')
+																		]),
+																	_List_fromArray(
+																		[
+																			A2(
+																			$elm$html$Html$i,
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$Attributes$class('bi bi-trash-fill')
+																				]),
+																			_List_Nil)
+																		]))
 																]))
 														]));
 											},
@@ -6306,7 +6334,92 @@ var $author$project$Main$view = function (model) {
 								}
 							}()
 							])),
-						$author$project$Main$modal(model)
+						A2(
+						$author$project$Modal$modal,
+						model.showModal,
+						A2(
+							$elm$html$Html$div,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_Nil,
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('text-xl font-bold mb-2')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Really delete BoM ?')
+												]))
+										])),
+									A2($elm$html$Html$hr, _List_Nil, _List_Nil),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('my-3')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('This action cannot be undone.')
+										])),
+									A2($elm$html$Html$hr, _List_Nil, _List_Nil),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('flex justify-end my-2')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('mx-2')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$button,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('px-2 py-1 rounded-md text-red-500'),
+															$elm$html$Html$Events$onClick($author$project$Main$ToggleModal)
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text('No')
+														]))
+												])),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('mx-2')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$button,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('px-2 py-1 bg-red-500 text-white rounded-md'),
+															$elm$html$Html$Events$onClick($author$project$Main$ToggleModal)
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Yes')
+														]))
+												]))
+										]))
+								])))
 					]))
 			]),
 		title: 'URL Interceptor'

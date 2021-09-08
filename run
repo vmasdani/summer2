@@ -15,9 +15,11 @@ type = args.type
 try:
     if type == 'prod':
         print('Running prod')
+        subprocess.run('npm run build',
+                       cwd='.', shell=True)
 
     elif type == 'build-tailwind':
-        subprocess.run('postcss tailwind.css -o css/tailwind.css',
+        subprocess.run('npm run build-tailwind',
                        cwd='.', shell=True)
 
     elif type == 'dev':
