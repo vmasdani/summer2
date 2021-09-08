@@ -5250,6 +5250,7 @@ var $mthadley$elm_hash_routing$Browser$Hash$application = function (config) {
 		});
 };
 var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$random$Random$Seed = F2(
 	function (a, b) {
 		return {$: 'Seed', a: a, b: b};
@@ -5276,10 +5277,14 @@ var $author$project$Main$init = F3(
 		return _Utils_Tuple2(
 			{
 				bomItems: $elm$core$Maybe$Just(_List_Nil),
+				bomSearch: '',
+				bomUuidToDelete: '',
 				boms: $elm$core$Maybe$Just(_List_Nil),
 				currentSeed: $elm$random$Random$initialSeed(flags.seed),
 				key: key,
+				modalContent: A2($elm$html$Html$div, _List_Nil, _List_Nil),
 				seed: flags.seed,
+				selectedBom: $elm$core$Maybe$Nothing,
 				showModal: false,
 				url: url
 			},
@@ -5312,6 +5317,10 @@ var $author$project$Main$subscriptions = function (_v0) {
 				$author$project$Main$idbRecv($author$project$Main$Recv)
 			]));
 };
+var $author$project$Main$DeleteBom = function (a) {
+	return {$: 'DeleteBom', a: a};
+};
+var $author$project$Main$ToggleModal = {$: 'ToggleModal'};
 var $author$project$Main$Bom = F2(
 	function (uuid, name) {
 		return {name: name, uuid: uuid};
@@ -5390,7 +5399,49 @@ var $author$project$Main$bomEncoder = function (bom) {
 				A2($elm_community$json_extra$Json$Encode$Extra$maybe, $elm$json$Json$Encode$string, bom.name))
 			]));
 };
+var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$json$Json$Decode$decodeString = _Json_runOnString;
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $elm_community$list_extra$List$Extra$find = F2(
+	function (predicate, list) {
+		find:
+		while (true) {
+			if (!list.b) {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var first = list.a;
+				var rest = list.b;
+				if (predicate(first)) {
+					return $elm$core$Maybe$Just(first);
+				} else {
+					var $temp$predicate = predicate,
+						$temp$list = rest;
+					predicate = $temp$predicate;
+					list = $temp$list;
+					continue find;
+				}
+			}
+		}
+	});
+var $elm$html$Html$hr = _VirtualDom_node('hr');
 var $author$project$Main$idbSend = _Platform_outgoingPort(
 	'idbSend',
 	function ($) {
@@ -5416,13 +5467,33 @@ var $elm$json$Json$Encode$list = F2(
 				entries));
 	});
 var $elm$browser$Browser$Navigation$load = _Browser_load;
+var $elm$core$Basics$neq = _Utils_notEqual;
 var $elm$core$Basics$not = _Basics_not;
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var $elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'click',
+		$elm$json$Json$Decode$succeed(msg));
+};
 var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
 var $elm$random$Random$step = F2(
 	function (_v0, seed) {
 		var generator = _v0.a;
 		return generator(seed);
 	});
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$url$Url$addPort = F2(
 	function (maybePort, starter) {
 		if (maybePort.$ === 'Nothing') {
@@ -5886,6 +5957,155 @@ var $danyx23$elm_uuid$Uuid$uuidGenerator = A2($elm$random$Random$map, $danyx23$e
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
+			case 'SearchBom':
+				var str = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{bomSearch: str}),
+					$elm$core$Platform$Cmd$none);
+			case 'DeleteBom':
+				var bomUuid = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							boms: function () {
+								var _v1 = model.boms;
+								if (_v1.$ === 'Just') {
+									var boms = _v1.a;
+									return $elm$core$Maybe$Just(
+										A2(
+											$elm$core$List$filter,
+											function (bom) {
+												return !_Utils_eq(
+													bom.uuid,
+													$elm$core$Maybe$Just(bomUuid));
+											},
+											boms));
+								} else {
+									return $elm$core$Maybe$Nothing;
+								}
+							}(),
+							showModal: false
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'ShowBomUuidDeleteModal':
+				var bomUuid = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							bomUuidToDelete: bomUuid,
+							modalContent: A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_List_Nil,
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('text-xl font-bold mb-2')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text(
+														'Really delete BoM ' + (function () {
+															var _v2 = model.boms;
+															if (_v2.$ === 'Just') {
+																var modelBoms = _v2.a;
+																var _v3 = A2(
+																	$elm_community$list_extra$List$Extra$find,
+																	function (bom) {
+																		return _Utils_eq(
+																			bom.uuid,
+																			$elm$core$Maybe$Just(bomUuid));
+																	},
+																	modelBoms);
+																if (_v3.$ === 'Just') {
+																	var foundBom = _v3.a;
+																	return A2($elm$core$Maybe$withDefault, '', foundBom.name);
+																} else {
+																	return '';
+																}
+															} else {
+																return '';
+															}
+														}() + '?'))
+													]))
+											])),
+										A2($elm$html$Html$hr, _List_Nil, _List_Nil),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('my-3')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('This action cannot be undone.')
+											])),
+										A2($elm$html$Html$hr, _List_Nil, _List_Nil),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('flex justify-end my-2')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('mx-2')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$button,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('px-2 py-1 rounded-md text-red-500'),
+																$elm$html$Html$Events$onClick($author$project$Main$ToggleModal)
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('No')
+															]))
+													])),
+												A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('mx-2')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$button,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('px-2 py-1 bg-red-500 text-white rounded-md'),
+																$elm$html$Html$Events$onClick(
+																$author$project$Main$DeleteBom(bomUuid))
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('Yes')
+															]))
+													]))
+											]))
+									])),
+							showModal: true
+						}),
+					$elm$core$Platform$Cmd$none);
 			case 'ToggleModal':
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -5922,9 +6142,9 @@ var $author$project$Main$update = F2(
 							table: 'boms'
 						}));
 			case 'AddBom':
-				var _v1 = A2($elm$random$Random$step, $danyx23$elm_uuid$Uuid$uuidGenerator, model.currentSeed);
-				var newUuid = _v1.a;
-				var newSeed = _v1.b;
+				var _v4 = A2($elm$random$Random$step, $danyx23$elm_uuid$Uuid$uuidGenerator, model.currentSeed);
+				var newUuid = _v4.a;
+				var newSeed = _v4.b;
 				var newBom = {
 					name: $elm$core$Maybe$Just(''),
 					uuid: $elm$core$Maybe$Just(
@@ -5935,9 +6155,9 @@ var $author$project$Main$update = F2(
 						model,
 						{currentSeed: newSeed}),
 					function () {
-						var _v2 = model.boms;
-						if (_v2.$ === 'Just') {
-							var boms = _v2.a;
+						var _v5 = model.boms;
+						if (_v5.$ === 'Just') {
+							var boms = _v5.a;
 							return $author$project$Main$idbSend(
 								{
 									content: A2(
@@ -5960,18 +6180,18 @@ var $author$project$Main$update = F2(
 				var recvModel = msg.a;
 				return _Utils_Tuple2(
 					function () {
-						var _v3 = recvModel.table;
-						if (_v3 === 'boms') {
+						var _v6 = recvModel.table;
+						if (_v6 === 'boms') {
 							return _Utils_update(
 								model,
 								{
 									boms: function () {
-										var _v4 = A2(
+										var _v7 = A2(
 											$elm$json$Json$Decode$decodeString,
 											$elm$json$Json$Decode$list($author$project$Main$bomDecoder),
 											recvModel.content);
-										if (_v4.$ === 'Ok') {
-											var boms = _v4.a;
+										if (_v7.$ === 'Ok') {
+											var boms = _v7.a;
 											return $elm$core$Maybe$Just(boms);
 										} else {
 											return model.boms;
@@ -6016,21 +6236,15 @@ var $author$project$Main$ChangeBomName = F2(
 	function (a, b) {
 		return {$: 'ChangeBomName', a: a, b: b};
 	});
+var $author$project$Main$SearchBom = function (a) {
+	return {$: 'SearchBom', a: a};
+};
 var $author$project$Main$SetModel = function (a) {
 	return {$: 'SetModel', a: a};
 };
-var $author$project$Main$ToggleModal = {$: 'ToggleModal'};
-var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$string(string));
-	});
-var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
-var $elm$html$Html$div = _VirtualDom_node('div');
-var $elm$html$Html$hr = _VirtualDom_node('hr');
+var $author$project$Main$ShowBomUuidDeleteModal = function (a) {
+	return {$: 'ShowBomUuidDeleteModal', a: a};
+};
 var $elm$html$Html$i = _VirtualDom_node('i');
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$virtual_dom$VirtualDom$attribute = F2(
@@ -6042,8 +6256,6 @@ var $elm$virtual_dom$VirtualDom$attribute = F2(
 	});
 var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
 var $elm$html$Html$span = _VirtualDom_node('span');
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$Modal$modal = F2(
 	function (show, content) {
 		return A2(
@@ -6107,23 +6319,6 @@ var $author$project$Modal$modal = F2(
 						]))
 				]));
 	});
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var $elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'click',
-		$elm$json$Json$Decode$succeed(msg));
-};
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
 };
@@ -6156,6 +6351,7 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
 };
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
+var $elm$core$String$toLower = _String_toLower;
 var $elm$core$Debug$toString = _Debug_toString;
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Main$view = function (model) {
@@ -6249,7 +6445,92 @@ var $author$project$Main$view = function (model) {
 										$author$project$Main$SetModel(
 											_Utils_update(
 												model,
-												{showModal: !model.showModal})))
+												{
+													modalContent: A2(
+														$elm$html$Html$div,
+														_List_Nil,
+														_List_fromArray(
+															[
+																A2(
+																$elm$html$Html$div,
+																_List_Nil,
+																_List_fromArray(
+																	[
+																		A2(
+																		$elm$html$Html$div,
+																		_List_fromArray(
+																			[
+																				$elm$html$Html$Attributes$class('text-xl font-bold mb-2')
+																			]),
+																		_List_fromArray(
+																			[
+																				$elm$html$Html$text('Really delete BoM ?')
+																			]))
+																	])),
+																A2($elm$html$Html$hr, _List_Nil, _List_Nil),
+																A2(
+																$elm$html$Html$div,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('my-3')
+																	]),
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text('This action cannot be undone.')
+																	])),
+																A2($elm$html$Html$hr, _List_Nil, _List_Nil),
+																A2(
+																$elm$html$Html$div,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('flex justify-end my-2')
+																	]),
+																_List_fromArray(
+																	[
+																		A2(
+																		$elm$html$Html$div,
+																		_List_fromArray(
+																			[
+																				$elm$html$Html$Attributes$class('mx-2')
+																			]),
+																		_List_fromArray(
+																			[
+																				A2(
+																				$elm$html$Html$button,
+																				_List_fromArray(
+																					[
+																						$elm$html$Html$Attributes$class('px-2 py-1 rounded-md text-red-500'),
+																						$elm$html$Html$Events$onClick($author$project$Main$ToggleModal)
+																					]),
+																				_List_fromArray(
+																					[
+																						$elm$html$Html$text('No')
+																					]))
+																			])),
+																		A2(
+																		$elm$html$Html$div,
+																		_List_fromArray(
+																			[
+																				$elm$html$Html$Attributes$class('mx-2')
+																			]),
+																		_List_fromArray(
+																			[
+																				A2(
+																				$elm$html$Html$button,
+																				_List_fromArray(
+																					[
+																						$elm$html$Html$Attributes$class('px-2 py-1 bg-red-500 text-white rounded-md'),
+																						$elm$html$Html$Events$onClick($author$project$Main$ToggleModal)
+																					]),
+																				_List_fromArray(
+																					[
+																						$elm$html$Html$text('Yes')
+																					]))
+																			]))
+																	]))
+															])),
+													showModal: !model.showModal
+												})))
 									]),
 								_List_fromArray(
 									[
@@ -6265,6 +6546,24 @@ var $author$project$Main$view = function (model) {
 								_List_fromArray(
 									[
 										$elm$html$Html$text('Add BoM')
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('flex my-3')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('flex-grow border-2 border-gray-500 rounded-md px-2 py-1'),
+												$elm$html$Html$Attributes$placeholder('Search BoM...'),
+												$elm$html$Html$Events$onInput($author$project$Main$SearchBom)
+											]),
+										_List_Nil)
 									])),
 								function () {
 								var _v0 = model.boms;
@@ -6297,9 +6596,9 @@ var $author$project$Main$view = function (model) {
 																			$author$project$Main$ChangeBomName(bom.uuid)),
 																			$elm$html$Html$Attributes$value(
 																			function () {
-																				var _v1 = bom.name;
-																				if (_v1.$ === 'Just') {
-																					var name = _v1.a;
+																				var _v2 = bom.name;
+																				if (_v2.$ === 'Just') {
+																					var name = _v2.a;
 																					return name;
 																				} else {
 																					return '';
@@ -6313,7 +6612,10 @@ var $author$project$Main$view = function (model) {
 																	$elm$html$Html$button,
 																	_List_fromArray(
 																		[
-																			$elm$html$Html$Attributes$class('py-1 px-2 ml-2 bg-red-500 hover:bg-red-600 text-white rounded-md')
+																			$elm$html$Html$Attributes$class('py-1 px-2 ml-2 bg-red-500 hover:bg-red-600 text-white rounded-md'),
+																			$elm$html$Html$Events$onClick(
+																			$author$project$Main$ShowBomUuidDeleteModal(
+																				A2($elm$core$Maybe$withDefault, '', bom.uuid)))
 																		]),
 																	_List_fromArray(
 																		[
@@ -6328,98 +6630,27 @@ var $author$project$Main$view = function (model) {
 																]))
 														]));
 											},
-											boms));
+											A2(
+												$elm$core$List$filter,
+												function (bom) {
+													var _v1 = bom.name;
+													if (_v1.$ === 'Just') {
+														var name = _v1.a;
+														return A2(
+															$elm$core$String$contains,
+															model.bomSearch,
+															$elm$core$String$toLower(name));
+													} else {
+														return true;
+													}
+												},
+												boms)));
 								} else {
 									return A2($elm$html$Html$div, _List_Nil, _List_Nil);
 								}
 							}()
 							])),
-						A2(
-						$author$project$Modal$modal,
-						model.showModal,
-						A2(
-							$elm$html$Html$div,
-							_List_Nil,
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$div,
-									_List_Nil,
-									_List_fromArray(
-										[
-											A2(
-											$elm$html$Html$div,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('text-xl font-bold mb-2')
-												]),
-											_List_fromArray(
-												[
-													$elm$html$Html$text('Really delete BoM ?')
-												]))
-										])),
-									A2($elm$html$Html$hr, _List_Nil, _List_Nil),
-									A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('my-3')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('This action cannot be undone.')
-										])),
-									A2($elm$html$Html$hr, _List_Nil, _List_Nil),
-									A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('flex justify-end my-2')
-										]),
-									_List_fromArray(
-										[
-											A2(
-											$elm$html$Html$div,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('mx-2')
-												]),
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$button,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$class('px-2 py-1 rounded-md text-red-500'),
-															$elm$html$Html$Events$onClick($author$project$Main$ToggleModal)
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('No')
-														]))
-												])),
-											A2(
-											$elm$html$Html$div,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('mx-2')
-												]),
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$button,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$class('px-2 py-1 bg-red-500 text-white rounded-md'),
-															$elm$html$Html$Events$onClick($author$project$Main$ToggleModal)
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('Yes')
-														]))
-												]))
-										]))
-								])))
+						A2($author$project$Modal$modal, model.showModal, model.modalContent)
 					]))
 			]),
 		title: 'URL Interceptor'

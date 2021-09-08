@@ -100,8 +100,12 @@ type alias Model =
     , showModal : Bool
     , boms : Maybe (List Bom)
     , bomItems : Maybe (List BomItem)
+    , bomUuidToDelete : String
     , currentSeed : Random.Seed
     , seed : Int
+    , modalContent : Html Msg
+    , selectedBom : Maybe Bom
+    , bomSearch : String
     }
 
 
@@ -115,10 +119,17 @@ init flags url key =
     ( { key = key
       , url = url
       , showModal = False
+      , bomUuidToDelete = ""
       , boms = Just []
       , bomItems = Just []
       , currentSeed = Random.initialSeed flags.seed
       , seed = flags.seed
+      , modalContent =
+            div
+                []
+                []
+      , selectedBom = Nothing
+      , bomSearch = ""
       }
     , Cmd.none
     )
@@ -137,11 +148,86 @@ type Msg
     | AddBom
     | ChangeBomName (Maybe String) String
     | ToggleModal
+    | ShowBomUuidDeleteModal String
+    | DeleteBom String
+    | SearchBom String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        SearchBom str ->
+            ( { model | bomSearch = str }, Cmd.none )
+
+        DeleteBom bomUuid ->
+            ( { model
+                | showModal = False
+                , boms =
+                    case model.boms of
+                        Just boms ->
+                            Just (List.filter (\bom -> bom.uuid /= Just bomUuid) boms)
+
+                        Nothing ->
+                            Nothing
+              }
+            , Cmd.none
+            )
+
+        ShowBomUuidDeleteModal bomUuid ->
+            ( { model
+                | showModal = True
+                , bomUuidToDelete = bomUuid
+                , modalContent =
+                    div []
+                        [ div []
+                            [ div
+                                [ class "text-xl font-bold mb-2" ]
+                                [ text <|
+                                    "Really delete BoM "
+                                        ++ ((case model.boms of
+                                                Just modelBoms ->
+                                                    case ListExtra.find (\bom -> bom.uuid == Just bomUuid) modelBoms of
+                                                        Just foundBom ->
+                                                            Maybe.withDefault "" foundBom.name
+
+                                                        _ ->
+                                                            ""
+
+                                                _ ->
+                                                    ""
+                                            )
+                                                ++ "?"
+                                           )
+                                ]
+                            ]
+                        , hr [] []
+                        , div
+                            [ class "my-3" ]
+                            [ text "This action cannot be undone." ]
+                        , hr [] []
+                        , div [ class "flex justify-end my-2" ]
+                            [ div [ class "mx-2" ]
+                                [ button
+                                    [ class "px-2 py-1 rounded-md text-red-500"
+                                    , onClick ToggleModal
+                                    ]
+                                    [ text "No" ]
+                                ]
+                            , div [ class "mx-2" ]
+                                [ button
+                                    [ class "px-2 py-1 bg-red-500 text-white rounded-md"
+                                    , onClick <|
+                                        DeleteBom
+                                            bomUuid
+                                    ]
+                                    [ text "Yes" ]
+                                ]
+                            ]
+                        ]
+              }
+            , Cmd.none
+            )
+
         ToggleModal ->
             ( { model | showModal = not model.showModal }, Cmd.none )
 
@@ -268,84 +354,102 @@ view model =
                     [ text <| Debug.toString (Random.step Uuid.uuidGenerator model.currentSeed)
                     ]
                 , button
-                    [ class "px-2 py-2 font-bold text-white bg-blue-500 hover:bg-blue-700", onClick (SetModel { model | showModal = not model.showModal }) ]
+                    [ class "px-2 py-2 font-bold text-white bg-blue-500 hover:bg-blue-700"
+                    , onClick
+                        (SetModel
+                            { model
+                                | showModal = not model.showModal
+                                , modalContent =
+                                    div []
+                                        [ div [] [ div [ class "text-xl font-bold mb-2" ] [ text "Really delete BoM ?" ] ]
+                                        , hr [] []
+                                        , div
+                                            [ class "my-3" ]
+                                            [ text "This action cannot be undone." ]
+                                        , hr [] []
+                                        , div [ class "flex justify-end my-2" ]
+                                            [ div [ class "mx-2" ]
+                                                [ button
+                                                    [ class "px-2 py-1 rounded-md text-red-500"
+                                                    , onClick ToggleModal
+                                                    ]
+                                                    [ text "No" ]
+                                                ]
+                                            , div [ class "mx-2" ]
+                                                [ button
+                                                    [ class "px-2 py-1 bg-red-500 text-white rounded-md"
+                                                    , onClick ToggleModal
+                                                    ]
+                                                    [ text "Yes" ]
+                                                ]
+                                            ]
+                                        ]
+                            }
+                        )
+                    ]
                     [ text "Show modal" ]
                 , button
                     [ class "px-2 py-2 font-bold text-white bg-green-500 hover:bg-green-700", onClick AddBom ]
                     [ text "Add BoM" ]
+                , div [ class "flex my-3" ]
+                    [ input
+                        [ class "flex-grow border-2 border-gray-500 rounded-md px-2 py-1"
+                        , placeholder "Search BoM..."
+                        , onInput <| SearchBom
+                        ]
+                        []
+                    ]
                 , case model.boms of
                     Just boms ->
                         div
                             []
-                            (List.map
-                                (\bom ->
-                                    div []
-                                        [ div [ class "flex my-1" ]
-                                            [ input
-                                                [ onInput (ChangeBomName bom.uuid)
-                                                , value <|
-                                                    case bom.name of
-                                                        Just name ->
-                                                            name
+                            (boms
+                                |> List.filter
+                                    (\bom ->
+                                        case bom.name of
+                                            Just name ->
+                                                String.contains model.bomSearch (String.toLower name)
 
-                                                        _ ->
-                                                            ""
-                                                , class "flex-grow border-2 border-grey-500 px-2 py-1 shadow shadow-md"
-                                                , placeholder "BoM Name..."
-                                                ]
-                                                []
-                                            , button
-                                                [ class "py-1 px-2 ml-2 bg-red-500 hover:bg-red-600 text-white rounded-md" ]
-                                                [ i
-                                                    [ class "bi bi-trash-fill" ]
+                                            _ ->
+                                                True
+                                    )
+                                |> List.map
+                                    (\bom ->
+                                        div []
+                                            [ div [ class "flex my-1" ]
+                                                [ input
+                                                    [ onInput (ChangeBomName bom.uuid)
+                                                    , value <|
+                                                        case bom.name of
+                                                            Just name ->
+                                                                name
+
+                                                            _ ->
+                                                                ""
+                                                    , class "flex-grow border-2 border-grey-500 px-2 py-1 shadow shadow-md"
+                                                    , placeholder "BoM Name..."
+                                                    ]
                                                     []
+                                                , button
+                                                    [ class "py-1 px-2 ml-2 bg-red-500 hover:bg-red-600 text-white rounded-md"
+                                                    , onClick <|
+                                                        ShowBomUuidDeleteModal <|
+                                                            Maybe.withDefault "" bom.uuid
+                                                    ]
+                                                    [ i
+                                                        [ class "bi bi-trash-fill" ]
+                                                        []
+                                                    ]
                                                 ]
                                             ]
-
-                                        -- , div [] [ text <| Debug.toString bom.name ]
-                                        -- , div []
-                                        --     [ text <|
-                                        --         case bom.uuid of
-                                        --             Just uuid ->
-                                        --                 uuid
-                                        --             _ ->
-                                        --                 ""
-                                        --     ]
-                                        ]
-                                )
-                                boms
+                                    )
                             )
 
                     _ ->
                         div [] []
                 ]
             , modal model.showModal
-                (div
-                    []
-                    [ div [] [ div [ class "text-xl font-bold mb-2" ] [ text "Really delete BoM ?" ] ]
-                    , hr [] []
-                    , div
-                        [ class "my-3" ]
-                        [ text "This action cannot be undone." ]
-                    , hr [] []
-                    , div [ class "flex justify-end my-2" ]
-                        [ div [ class "mx-2" ]
-                            [ button
-                                [ class "px-2 py-1 rounded-md text-red-500"
-                                , onClick ToggleModal
-                                ]
-                                [ text "No" ]
-                            ]
-                        , div [ class "mx-2" ]
-                            [ button
-                                [ class "px-2 py-1 bg-red-500 text-white rounded-md"
-                                , onClick ToggleModal
-                                ]
-                                [ text "Yes" ]
-                            ]
-                        ]
-                    ]
-                )
+                model.modalContent
 
             -- , modal model
             ]
