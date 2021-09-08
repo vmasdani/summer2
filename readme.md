@@ -18,8 +18,8 @@ I plan to add:
 1. Install `npm i`
 2. Build Tailwind first
 ```sh
-./run.py build-tailwind
+./run build-tailwind
 ```
-3. Run `./run.py dev` for development
+3. Run `./run dev` for development
 
 Will be available in `http://localhost:5000`    
