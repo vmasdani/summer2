@@ -1,23 +1,43 @@
 {
-  "name": "elm-tailwind",
+  "name": "svelte-app",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build-tailwind": "postcss tailwind.css -o css/tailwind.css",
-    "dev": "elm make src/Main.elm --output=js/main.js && serve",
-    "build": "NODE_ENV=production postcss tailwind.css -o css/tailwind.css && elm make src/Main.elm --output=js/main.js && serve"
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "start": "sirv public --no-clear",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "build-tailwind": "rm -rf src/tailwind.css && postcss tailwind.css -o src/tailwind.css",
+    "prod": "./build.sh"
   },
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
-    "autoprefixer": "^10.3.3",
-    "postcss": "^8.3.6",
-    "tailwindcss": "^2.2.9"
+    "@rollup/plugin-commonjs": "^17.0.0",
+    "@rollup/plugin-node-resolve": "^11.0.0",
+    "@rollup/plugin-typescript": "^8.0.0",
+    "@tsconfig/svelte": "^2.0.0",
+    "autoprefixer": "^10.3.6",
+    "postcss": "^8.3.8",
+    "rollup": "^2.3.4",
+    "rollup-plugin-css-only": "^3.1.0",
+    "rollup-plugin-livereload": "^2.0.0",
+    "rollup-plugin-svelte": "^7.0.0",
+    "rollup-plugin-terser": "^7.0.0",
+    "svelte": "^3.0.0",
+    "svelte-check": "^2.0.0",
+    "svelte-preprocess": "^4.0.0",
+    "tailwindcss": "^2.2.16",
+    "tslib": "^2.0.0",
+    "typescript": "^4.0.0"
   },
   "dependencies": {
-    "postcss-cli": "^8.3.1",
-    "serve": "^12.0.0"
+    "@types/uuid": "^8.3.1",
+    "bootstrap": "^5.1.1",
+    "bootstrap-icons": "^1.5.0",
+    "idb-keyval": "^6.0.2",
+    "postcss-cli": "^9.0.1",
+    "sirv-cli": "^1.0.0",
+    "svelte-icons": "^2.1.0",
+    "svelte-material-icons": "^1.0.3",
+    "uuid": "^8.3.2"
   }
 }

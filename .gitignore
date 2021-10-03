@@ -1,4 +1,5 @@
 node_modules
 css/tailwind.css
+src/tailwind.css
 dist
-elm-stuff
+public/build
