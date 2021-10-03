@@ -8,11 +8,11 @@ Why a new repository? Because the storage system is totally different--the forme
 - Summer2 uses [TailwindCSS](https://tailwindcss.com/), [Svelte](https://svelte.dev/), and [idb-keyval](https://github.com/jakearchibald/idb-keyval)
 
 I plan to add:
-- [] JSON import <-> export and interoperability with Summer v1
-- [] Different currencies
-- [] Online storage/synchronization
+- [ ] JSON import <-> export and interoperability with Summer v1
+- [ ] Different currencies
+- [ ] Online storage/synchronization
 - [x] BoM duplication for similar BoM list
-- [] Link for online shopping reference
+- [ ] Link for online shopping reference
 
 ### Running
 1. Install `npm i`
