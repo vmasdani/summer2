@@ -20,7 +20,7 @@ I plan to add:
 ```sh
 npm run build-tailwind
 ```
-3. Run `npm run prod` for development
+3. Run `npm run dev` for development
 
 Will be available in `http://localhost:5000`   
 
