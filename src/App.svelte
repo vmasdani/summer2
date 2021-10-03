@@ -223,7 +223,7 @@
   };
 
   $: filteredBoms = boms.filter((bom) =>
-    bom.name.toLowerCase().includes(searchBom.toLowerCase())
+    bom?.name?.toLowerCase().includes(searchBom.toLowerCase())
   );
 
   $: filteredItems = items.filter((item) => item.bomUuid === selectedBomUuid);
