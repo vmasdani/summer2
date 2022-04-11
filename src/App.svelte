@@ -241,7 +241,7 @@
       </div>
     </div>
     <div class="flex justify-center container mx-auto">
-      <div class="italic">Your simple BoM List Manager</div>
+      <div class="italic">Your simple BoM List Manager, with offline support!</div>
     </div>
     <div class="flex items-center">
       <div>Pick your BoM</div>
